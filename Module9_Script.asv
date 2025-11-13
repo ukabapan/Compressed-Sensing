@@ -1,0 +1,106 @@
+clear; clc; close all;
+load('AssignmentsData/CroppedYale_96_84_2414_subset.mat');
+
+all_images = double(faces(:, :)');
+colmin = min(all_images);
+colmax = max(all_images);
+all_images = rescale(all_images,"InputMin",colmin,"InputMax",colmax);
+all_labels = facecls;
+
+rng("default");
+data_partition = cvpartition(all_labels,Holdout=0.5);
+
+train_mask = training(data_partition);
+test_mask = test(data_partition);
+
+num_classes = length(unique(all_labels));
+num_tests = data_partition.TestSize;
+num_train = data_partition.TrainSize;
+
+
+A = all_images(:,train_mask);
+Y = all_images(:, test_mask);
+
+[A,A_mu, ~] = normalize(A, "center");
+
+
+num_components = 1000;
+[coeff, ~, ~, ~, explained] = pca(A', 'NumComponents', num_components, 'Centered','off');
+
+A = coeff' * A; % Project training data
+
+
+A_labels = all_labels(train_mask);
+Y_labels = all_labels(test_mask);
+
+labels_mask = (A_labels == 1:num_classes);
+
+% if isempty(gcp('nocreate'))
+%     parpool;
+% end
+
+tic
+corruption_levels = linspace(0,0.4,2);
+
+IMG_HEIGHT = sizeim(1);
+IMG_WIDTH  = sizeim(2);
+for corr_level = corruption_levels
+    [all_indices, all_values] = get_block_occlusion_data(Y, IMG_HEIGHT, IMG_WIDTH, occlusion_percentage);
+    Y = coeff' * (Y - A_mu); % Project test data (using train mean)
+    predicted_classes = zeros(num_tests,1);
+    parfor ii = 1:num_tests
+        x_hat = lasso(A, Y(:,ii), "Lambda",1e-4);
+        [~, predicted_classes(ii)] = min(vecnorm(Y(:,ii) -  A * (x_hat.*labels_mask)));
+    end
+end
+toc
+
+accuracy_rate = mean(predicted_classes == Y_labels);
+
+
+function [all_indices, all_values] = get_block_occlusion_data(Y, IMG_HEIGHT, IMG_WIDTH, occlusion_percentage)
+    
+    [NUM_PIXELS, N_test] = size(Y);
+    
+    if NUM_PIXELS ~= (IMG_HEIGHT * IMG_WIDTH)
+        error('Image dimensions (IMG_HEIGHT * IMG_WIDTH) do not match vector size (NUM_PIXELS).');
+    end
+
+    num_occluded_pixels = floor(NUM_PIXELS * occlusion_percentage);
+    block_size = floor(sqrt(num_occluded_pixels));
+    
+    if block_size < 1
+        all_indices = [];
+        all_values = [];
+        return;
+    end
+
+    max_row_start = IMG_HEIGHT - block_size + 1;
+    max_col_start = IMG_WIDTH - block_size + 1;
+
+
+    cell_indices = cell(1, N_test);
+    cell_values = cell(1, N_test);
+
+    parfor i = 1:N_test
+        row_start = randi(max_row_start);
+        col_start = randi(max_col_start);
+        row_end = row_start + block_size - 1;
+        col_end = col_start + block_size - 1;
+
+        occlusion_block_values = rand(block_size, block_size); 
+
+        [cols_in_block, rows_in_block] = meshgrid(col_start:col_end, row_start:row_end);
+        
+        linear_indices_2d = sub2ind([IMG_HEIGHT, IMG_WIDTH], rows_in_block(:), cols_in_block(:));
+
+        linear_indices_Y = sub2ind(size(Y), linear_indices_2d, repmat(i, length(linear_indices_2d), 1));
+
+        cell_indices{i} = linear_indices_Y;
+        cell_values{i} = occlusion_block_values(:);
+    end
+
+    all_indices = cat(1, cell_indices{:});
+    all_values = cat(1, cell_values{:});
+    
+end
