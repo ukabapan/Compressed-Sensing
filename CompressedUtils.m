@@ -202,7 +202,7 @@ end
 solution_error = norm(y-A*x_hat, 2);
 end
 
-        function [x_hat, solution_error] = solveL1(A, y)
+function [x_hat, solution_error] = solveL1(A, y)
 % L1-minimization algorithm to recover a time or frequency sparse signal.
 %
 % Inputs:

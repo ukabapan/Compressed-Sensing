@@ -27,7 +27,7 @@ for signal_idx = 1:length(signal_types)
             trial_nmse = zeros(num_trials, length(algo_names));
 
             parfor trial = 1:num_trials
-                
+
                 I = eye(N);
                 F = dct(I); % Orthonormal DCT matrix
                 % Build specific type of measurement matrix
@@ -53,7 +53,7 @@ for signal_idx = 1:length(signal_types)
                     otherwise
                         error('Unknown matrix type specified.');
                 end
-                
+
                 % Build specific type of signal
                 x = zeros(N, 1);
                 x(randperm(N,S)) = randn(S, 1);

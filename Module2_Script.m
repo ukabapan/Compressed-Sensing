@@ -12,7 +12,7 @@ for i = 1:numel(A_all)
     fprintf("Error for %s: %.4e\n", txt_all{i}, error)
 end
 
-%% Problem 2 
+%% Problem 2
 % Most of the elements of the Af matrix are mirrored with the exception of
 % sign changes here and there.
 % Ar array seems normal otherwise

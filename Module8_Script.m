@@ -48,7 +48,7 @@ for i = 1:num_images
             recovered_patches_vec = zeros(size(patches_vec));
 
             F_srm = [];
-            
+
             switch sensing_type
                 case 'SRM'
                     dct_1d = dctmtx(patch_size);
@@ -63,7 +63,7 @@ for i = 1:num_images
 
                     case 'Gaussian'
                         A = randn(M, N_patch);
-                        
+
                         A = orth(A')'; % Orthonormalize rows
                         y = A * patch_col;
                         A_eff = A * Psi;

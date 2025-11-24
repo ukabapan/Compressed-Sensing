@@ -14,7 +14,7 @@ S = 3;
 % A
 for i = 1:numel(A_all)
     [~, x_error] = CompressedUtils.solveOMP(A_all{i},y_all{i},S);
-    fprintf("%s Error for OMP: %.4e\n", text_all{i}, x_error); 
+    fprintf("%s Error for OMP: %.4e\n", text_all{i}, x_error);
 end
 
 % B
@@ -29,7 +29,7 @@ end
 N = 256; S = 5;
 
 tol = 10e-6;
-num_meas = 0:10:100; 
+num_meas = 0:10:100;
 n_iter = 100;
 
 count_sp = zeros(size(num_meas));
@@ -49,7 +49,7 @@ for i = 1:numel(num_meas)
 
         x_OMP = CompressedUtils.solveOMP(A,y,S);
         error_OMP = norm(x_OMP-x, 2);
-        
+
         count_sp(i)  = count_sp(i)  + (error_SP<tol);
         count_omp(i) = count_omp(i) + (error_OMP<tol);
     end

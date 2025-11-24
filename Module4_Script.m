@@ -4,7 +4,7 @@ clearvars; close all; clc;
 N = 256; S = 5;
 
 tol = 10e-6;
-num_meas = 0:10:100; 
+num_meas = 0:10:100;
 n_iter = 100;
 
 count_sp = zeros(size(num_meas));
@@ -28,7 +28,7 @@ for i = 1:numel(num_meas)
 
         x_L1 = CompressedUtils.solveL1(A,y);
         error_l1 = norm(x_L1-x, 2);
-        
+
         count_sp(i)  = count_sp(i)  + (error_SP<tol);
         count_omp(i) = count_omp(i) + (error_OMP<tol);
         count_l1(i)  = count_l1(i) + (error_l1<tol);
